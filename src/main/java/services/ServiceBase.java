@@ -12,7 +12,6 @@ public class ServiceBase {
     /**
      * EntityManagerインスタンス
      */
-
     protected EntityManager em = DBUtil.createEntityManager();
 
     /**
@@ -20,7 +19,7 @@ public class ServiceBase {
      */
     public void close() {
         if (em.isOpen()) {
-
+            em.close();
         }
     }
 }

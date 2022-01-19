@@ -19,7 +19,6 @@ import lombok.Setter;
 
 /**
  * 従業員データのDTOモデル
- * @author asami
  *
  */
 @Table(name = JpaConst.TABLE_EMP)
@@ -96,4 +95,3 @@ public class Employee {
     private Integer deleteFlag;
 
 }
-
