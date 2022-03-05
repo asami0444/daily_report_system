@@ -7,11 +7,13 @@ import java.util.List;
 import javax.servlet.ServletException;
 
 import actions.views.EmployeeView;
+import actions.views.LikeView;
 import actions.views.ReportView;
 import constants.AttributeConst;
 import constants.ForwardConst;
 import constants.JpaConst;
 import constants.MessageConst;
+import services.LikeService;
 import services.ReportService;
 
 /**
@@ -20,7 +22,8 @@ import services.ReportService;
  */
 public class ReportAction extends ActionBase {
 
-    public ReportService service;
+    private ReportService service;
+    private LikeService likeService;
 
     /**
      * メソッドを実行する
@@ -29,10 +32,13 @@ public class ReportAction extends ActionBase {
     public void process() throws ServletException, IOException {
 
         service = new ReportService();
+        likeService = new LikeService();
 
         //メソッドを実行
         invoke();
         service.close();
+        likeService.close();
+
     }
 
     /**
@@ -250,6 +256,14 @@ public class ReportAction extends ActionBase {
 
         service.update(rv);
 
+        //パラメータの値をもとに日報情報のインスタンスを作成する
+
+        EmployeeView ev = (EmployeeView) getSessionScope(AttributeConst.LOGIN_EMP);
+
+        LikeView lv = new LikeView(null,ev,rv,null,null);
+
+        likeService.create(lv);
+
         //セッションに更新完了のフラッシュメッセージを設定
         putSessionScope(AttributeConst.FLUSH, MessageConst.I_GOOD.getMessage());
 
@@ -258,4 +272,28 @@ public class ReportAction extends ActionBase {
 
     }
 
-}
+    public void indexLike() throws ServletException, IOException {
+
+        ReportView rv = service.findOne(toNumber(getRequestParam(AttributeConst.REP_ID)));
+
+      //セッションからログイン中の従業員情報を取得
+
+        //ログイン中の従業員が作成した日報データを、指定されたページ数の一覧画面に表示する分取得する
+        int page = getPage();
+        List<LikeView> likes = likeService.getMinePerPage(rv, page);
+
+        //ログイン中の従業員が作成した日報データの件数を取得
+        long likesCount = likeService.countAllMine(rv);
+
+        putRequestScope(AttributeConst.LIKES, likes); //取得した日報データ
+        putRequestScope(AttributeConst.LIK_COUNT, likesCount); //全ての日報データの件数
+        putRequestScope(AttributeConst.PAGE, page); //ページ数
+        putRequestScope(AttributeConst.MAX_ROW, JpaConst.ROW_PER_PAGE); //1ページに表示するレコードの数
+
+        //一覧画面を表示
+        forward(ForwardConst.FW_REP_INDEXLIKE);
+    }
+
+    }
+
+
